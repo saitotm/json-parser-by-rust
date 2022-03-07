@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn tokenzie_object() {
-        let input = r#"{ "elm1" : 123, "elm2" : 456 }"#;
+        let input = r#"{ "elm1" : 123, "elm2" : 456 , "elm3" : "apple" }"#;
         let mut tokenizer = Tokenizer::new(input);
         assert_eq!(tokenizer.next(), Ok(Token::LeftCurlyBranckt));
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm1".to_string())));
@@ -185,13 +185,17 @@ mod tests {
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm2".to_string())));
         assert_eq!(tokenizer.next(), Ok(Token::Colon));
         assert_eq!(tokenizer.next(), Ok(Token::Int(456)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm3".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
         assert_eq!(tokenizer.next(), Ok(Token::RightCurlyBranckt));
         assert_eq!(tokenizer.next(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenzie_object_no_whitespaces() {
-        let input = r#"{"elm1":123,"elm2":456}"#;
+        let input = r#"{"elm1":123,"elm2":456,"elm3":"apple"}"#;
         let mut tokenizer = Tokenizer::new(input);
         assert_eq!(tokenizer.next(), Ok(Token::LeftCurlyBranckt));
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm1".to_string())));
@@ -201,7 +205,39 @@ mod tests {
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm2".to_string())));
         assert_eq!(tokenizer.next(), Ok(Token::Colon));
         assert_eq!(tokenizer.next(), Ok(Token::Int(456)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm3".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
         assert_eq!(tokenizer.next(), Ok(Token::RightCurlyBranckt));
+        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+    }
+
+    #[test]
+    fn tokenize_list() {
+        let input = r#"[ 123, 456 , "apple" ]"#;
+        let mut tokenizer = Tokenizer::new(input);
+        assert_eq!(tokenizer.next(), Ok(Token::LeftSquareBrancket));
+        assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next(), Ok(Token::Int(456)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::RightSquareBrancket));
+        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+    }
+
+    #[test]
+    fn tokenize_list_no_whitespaces() {
+        let input = r#"[123,456,"apple"]"#;
+        let mut tokenizer = Tokenizer::new(input);
+        assert_eq!(tokenizer.next(), Ok(Token::LeftSquareBrancket));
+        assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next(), Ok(Token::Int(456)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::RightSquareBrancket));
         assert_eq!(tokenizer.next(), Ok(Token::Eof));
     }
 }
