@@ -7,6 +7,7 @@ pub enum Token {
     Int(i64),
     // Float(f64),
     JsonString(String),
+    Boolean(bool),
     Colon,
     Comma,
     LeftSquareBrancket,
@@ -57,6 +58,8 @@ impl Tokenizer {
                 Ok(Token::Comma)
             }
             Some('\"') => self.tokenize_string(),
+            Some('t') => self.tokenize_true(),
+            Some('f') => self.tokenize_false(),
             _ => Ok(Token::Eof),
         }
     }
@@ -101,6 +104,25 @@ impl Tokenizer {
                 Ok(Token::Int(num))
             }
         }
+    }
+
+    fn tokenize_true(&mut self) -> Result<Token, String> {
+        self.assume('t')?;
+        self.assume('r')?;
+        self.assume('u')?;
+        self.assume('e')?;
+
+        Ok(Token::Boolean(true))
+    }
+
+    fn tokenize_false(&mut self) -> Result<Token, String> {
+        self.assume('f')?;
+        self.assume('a')?;
+        self.assume('l')?;
+        self.assume('s')?;
+        self.assume('e')?;
+
+        Ok(Token::Boolean(false))
     }
 
     fn read_digits(&mut self) -> i64 {
@@ -174,69 +196,116 @@ mod tests {
     }
 
     #[test]
+    fn tokenize_true() {
+        let mut tokenizer = Tokenizer::new(r#"true"#);
+        assert_eq!(tokenizer.next(), Ok(Token::Boolean(true)));
+        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+    }
+
+    #[test]
+    fn tokenize_false() {
+        let mut tokenizer = Tokenizer::new(r#"false"#);
+        assert_eq!(tokenizer.next(), Ok(Token::Boolean(false)));
+        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+    }
+
+    #[test]
     fn tokenzie_object() {
-        let input = r#"{ "elm1" : 123, "elm2" : 456 , "elm3" : "apple" }"#;
+        let input = r#"{ "elm1" : 123, "elm2" : 456 , "elm3" : "apple", "elm4": false }"#;
         let mut tokenizer = Tokenizer::new(input);
         assert_eq!(tokenizer.next(), Ok(Token::LeftCurlyBranckt));
+
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm1".to_string())));
         assert_eq!(tokenizer.next(), Ok(Token::Colon));
         assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
         assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm2".to_string())));
         assert_eq!(tokenizer.next(), Ok(Token::Colon));
         assert_eq!(tokenizer.next(), Ok(Token::Int(456)));
         assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm3".to_string())));
         assert_eq!(tokenizer.next(), Ok(Token::Colon));
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm4".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::Boolean(false)));
+
         assert_eq!(tokenizer.next(), Ok(Token::RightCurlyBranckt));
         assert_eq!(tokenizer.next(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenzie_object_no_whitespaces() {
-        let input = r#"{"elm1":123,"elm2":456,"elm3":"apple"}"#;
+        let input = r#"{"elm1":123,"elm2":456,"elm3":"apple","elm4":false}"#;
         let mut tokenizer = Tokenizer::new(input);
         assert_eq!(tokenizer.next(), Ok(Token::LeftCurlyBranckt));
+
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm1".to_string())));
         assert_eq!(tokenizer.next(), Ok(Token::Colon));
         assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
         assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm2".to_string())));
         assert_eq!(tokenizer.next(), Ok(Token::Colon));
         assert_eq!(tokenizer.next(), Ok(Token::Int(456)));
         assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm3".to_string())));
         assert_eq!(tokenizer.next(), Ok(Token::Colon));
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm4".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::Boolean(false)));
+
         assert_eq!(tokenizer.next(), Ok(Token::RightCurlyBranckt));
         assert_eq!(tokenizer.next(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenize_list() {
-        let input = r#"[ 123, 456 , "apple" ]"#;
+        let input = r#"[ 123, 456 , "apple", true ]"#;
         let mut tokenizer = Tokenizer::new(input);
         assert_eq!(tokenizer.next(), Ok(Token::LeftSquareBrancket));
+
         assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
         assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
         assert_eq!(tokenizer.next(), Ok(Token::Int(456)));
         assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::Boolean(true)));
+
         assert_eq!(tokenizer.next(), Ok(Token::RightSquareBrancket));
         assert_eq!(tokenizer.next(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenize_list_no_whitespaces() {
-        let input = r#"[123,456,"apple"]"#;
+        let input = r#"[123,456,"apple",true]"#;
         let mut tokenizer = Tokenizer::new(input);
+
         assert_eq!(tokenizer.next(), Ok(Token::LeftSquareBrancket));
+
         assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
         assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
         assert_eq!(tokenizer.next(), Ok(Token::Int(456)));
         assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
         assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::Boolean(true)));
+
         assert_eq!(tokenizer.next(), Ok(Token::RightSquareBrancket));
         assert_eq!(tokenizer.next(), Ok(Token::Eof));
     }
