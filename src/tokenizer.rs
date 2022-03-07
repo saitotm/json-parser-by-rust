@@ -79,7 +79,7 @@ impl Tokenizer {
     fn tokenize_string(&mut self) -> Result<Token, String> {
         let mut ident = String::new();
 
-        self.assume('\"')?;
+        self.consume('\"')?;
         loop {
             match self.front() {
                 Some('\\') => {
@@ -116,20 +116,20 @@ impl Tokenizer {
     }
 
     fn tokenize_true(&mut self) -> Result<Token, String> {
-        self.assume('t')?;
-        self.assume('r')?;
-        self.assume('u')?;
-        self.assume('e')?;
+        self.consume('t')?;
+        self.consume('r')?;
+        self.consume('u')?;
+        self.consume('e')?;
 
         Ok(Token::Boolean(true))
     }
 
     fn tokenize_false(&mut self) -> Result<Token, String> {
-        self.assume('f')?;
-        self.assume('a')?;
-        self.assume('l')?;
-        self.assume('s')?;
-        self.assume('e')?;
+        self.consume('f')?;
+        self.consume('a')?;
+        self.consume('l')?;
+        self.consume('s')?;
+        self.consume('e')?;
 
         Ok(Token::Boolean(false))
     }
@@ -153,7 +153,7 @@ impl Tokenizer {
         self.input.pop_front()
     }
 
-    fn assume(&mut self, c: char) -> Result<char, String> {
+    fn consume(&mut self, c: char) -> Result<char, String> {
         match self.pop() {
             Some(top) if top == c => Ok(top), 
             Some(top) => Err(format!("The tokenizer expected {:}, but found {:}.", c, top)),
