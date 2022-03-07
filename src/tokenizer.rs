@@ -63,7 +63,10 @@ impl Tokenizer {
             Some('t') => self.tokenize_true(),
             Some('f') => self.tokenize_false(),
             None => Ok(Token::Eof),
-            Some(c) => Err(format!("The tokenizer found an unexpected character \'{:}\'.", c)),
+            Some(c) => Err(format!(
+                "The tokenizer found an unexpected character \'{:}\'.",
+                c
+            )),
         }
     }
 
@@ -85,15 +88,15 @@ impl Tokenizer {
                 Some('\\') => {
                     let escaped = self.pop_escape().ok_or(r#"The next of \ must be a escaped character"#)?;
                     ident.push(escaped);
-                }
+                },
                 Some('\"') => { self.pop(); break; },
                 Some(&c) if json_util::is_unescaped(c) => {
                     self.pop();
                     ident.push(c);
-                } 
+                },
                 None => return Err("The tokenizer reached EOF before finding \" which represents the end of a string".to_string()),
                 _ => return Err("The tokenizer found a unexpected character while tokenizing string.".to_string()),
-            };
+            }
         }
 
         Ok(Token::JsonString(ident))
@@ -145,20 +148,23 @@ impl Tokenizer {
         digits.parse().expect("digits must represent number.")
     }
 
+    fn consume(&mut self, c: char) -> Result<char, String> {
+        match self.pop() {
+            Some(top) if top == c => Ok(top),
+            Some(top) => Err(format!(
+                "The tokenizer expected {:}, but found {:}.",
+                c, top
+            )),
+            _ => Err(format!("The tokenizer expected {:}, but reached EOF.", c)),
+        }
+    }
+
     fn front(&self) -> Option<&char> {
         self.input.front()
     }
 
     fn pop(&mut self) -> Option<char> {
         self.input.pop_front()
-    }
-
-    fn consume(&mut self, c: char) -> Result<char, String> {
-        match self.pop() {
-            Some(top) if top == c => Ok(top), 
-            Some(top) => Err(format!("The tokenizer expected {:}, but found {:}.", c, top)),
-            _ => Err(format!("The tokenizer expected {:}, but reached EOF.", c)),
-        }
     }
 
     fn pop_digit(&mut self) -> Option<char> {
@@ -211,7 +217,6 @@ mod tests {
         assert_eq!(tokenizer.next(), Ok(Token::Int(-123)));
         assert_eq!(tokenizer.next(), Ok(Token::Eof));
     }
-
 
     #[test]
     fn tokenize_string() {
@@ -336,8 +341,10 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn tokenize_large_input1() {
-        let input = format!("{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n", 
+        let input = format!(
+            "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n",
             r#"{"#,
             r#"   "Image": {"#,
             r#"       "Width":  800,"#,
