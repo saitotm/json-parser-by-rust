@@ -2,6 +2,7 @@ use std::collections::VecDeque;
 
 use crate::json_util;
 
+// Todo: remove PartialEq and Eq to add Float
 #[derive(Debug, PartialEq, Eq)]
 pub enum Token {
     Int(i64),
@@ -97,6 +98,7 @@ impl Tokenizer {
         Ok(Token::JsonString(ident))
     }
 
+    //Todo: fix to accpet float values
     fn tokenize_number(&mut self) -> Result<Token, String> {
         match self.front() {
             //Some('0') => Err("The head of number must not be zero"),
@@ -131,6 +133,7 @@ impl Tokenizer {
         Ok(Token::Boolean(false))
     }
 
+    // Todo: make the return type Result<i64, String>.
     fn read_digits(&mut self) -> i64 {
         let mut digits = String::new();
 
@@ -179,6 +182,7 @@ impl Tokenizer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // Todo: define a function or macro to determine whether two tokens are same or not.
 
     #[test]
     fn tokenize_empty() {
