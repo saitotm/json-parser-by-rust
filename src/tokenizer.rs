@@ -62,7 +62,8 @@ impl Tokenizer {
             Some('\"') => self.tokenize_string(),
             Some('t') => self.tokenize_true(),
             Some('f') => self.tokenize_false(),
-            _ => Ok(Token::Eof),
+            None => Ok(Token::Eof),
+            Some(c) => Err(format!("The tokenizer found an unexpected character \'{:}\'.", c)),
         }
     }
 
