@@ -33,6 +33,7 @@ impl Tokenizer {
 
         match self.front() {
             Some(c) if c.is_ascii_digit() => self.tokenize_number(),
+            Some('-') => self.tokenize_number(),
             Some('{') => {
                 self.pop();
                 Ok(Token::LeftCurlyBranckt)
@@ -99,6 +100,11 @@ impl Tokenizer {
     fn tokenize_number(&mut self) -> Result<Token, String> {
         match self.front() {
             //Some('0') => Err("The head of number must not be zero"),
+            Some('-') => {
+                self.pop();
+                let num = self.read_digits();
+                Ok(Token::Int(-num))
+            }
             _ => {
                 let num = self.read_digits();
                 Ok(Token::Int(num))
@@ -175,9 +181,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn tokenize_int() {
-        let mut tokenizer = Tokenizer::new("123");
-        assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
+    fn tokenize_empty() {
+        let mut tokenizer = Tokenizer::new("");
         assert_eq!(tokenizer.next(), Ok(Token::Eof));
     }
 
@@ -187,6 +192,21 @@ mod tests {
         assert_eq!(tokenizer.next(), Ok(Token::Int(0)));
         assert_eq!(tokenizer.next(), Ok(Token::Eof));
     }
+
+    #[test]
+    fn tokenize_int() {
+        let mut tokenizer = Tokenizer::new("123");
+        assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+    }
+
+    #[test]
+    fn tokenize_minus_int() {
+        let mut tokenizer = Tokenizer::new("-123");
+        assert_eq!(tokenizer.next(), Ok(Token::Int(-123)));
+        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+    }
+
 
     #[test]
     fn tokenize_string() {
