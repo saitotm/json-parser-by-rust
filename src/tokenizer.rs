@@ -334,4 +334,92 @@ mod tests {
         assert_eq!(tokenizer.next(), Ok(Token::RightSquareBrancket));
         assert_eq!(tokenizer.next(), Ok(Token::Eof));
     }
+
+    #[test]
+    fn tokenize_large_input1() {
+        let input = format!("{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n", 
+            r#"{"#,
+            r#"   "Image": {"#,
+            r#"       "Width":  800,"#,
+            r#"       "Height": 600,"#,
+            r#"       "Title":  "View from 15th Floor","#,
+            r#"       "Thumbnail": {"#,
+            r#"           "Url":    "http://www.example.com/image/481989943","#,
+            r#"           "Height": 125,"#,
+            r#"           "Width":  100"#,
+            r#"       },"#,
+            r#"       "Animated" : false,"#,
+            r#"       "IDs": [116, 943, 234, 38793]"#,
+            r#"     }"#,
+            r#"}"#,
+        );
+
+        let mut tokenizer = Tokenizer::new(input);
+        assert_eq!(tokenizer.next(), Ok(Token::LeftCurlyBranckt));
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Image".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::LeftCurlyBranckt));
+
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Width".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::Int(800)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Height".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::Int(600)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Title".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("View from 15th Floor".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Thumbnail".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::LeftCurlyBranckt));
+
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Url".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("http://www.example.com/image/481989943".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Height".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::Int(125)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Width".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::Int(100)));
+
+        assert_eq!(tokenizer.next(), Ok(Token::RightCurlyBranckt));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Animated".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next(), Ok(Token::Boolean(false)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::JsonString("IDs".to_string())));
+        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+
+        assert_eq!(tokenizer.next(), Ok(Token::LeftSquareBrancket));
+
+        assert_eq!(tokenizer.next(), Ok(Token::Int(116)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::Int(943)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::Int(234)));
+        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+
+        assert_eq!(tokenizer.next(), Ok(Token::Int(38793)));
+
+        assert_eq!(tokenizer.next(), Ok(Token::RightSquareBrancket));
+
+        assert_eq!(tokenizer.next(), Ok(Token::RightCurlyBranckt));
+        assert_eq!(tokenizer.next(), Ok(Token::RightCurlyBranckt));
+    }
 }
