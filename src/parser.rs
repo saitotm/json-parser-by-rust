@@ -1,10 +1,12 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
+
+use indexmap::IndexMap;
 
 use crate::tokenizer::Token;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Node {
-    Object(HashMap<String, Node>),
+    Object(IndexMap<String, Node>),
     Array(Vec<Node>),
     Boolean(bool),
     Int(i64),
@@ -75,7 +77,7 @@ impl Parser {
     }
 
     fn object(&mut self) -> Result<Node, String> {
-        let mut kvm = HashMap::new();
+        let mut kvm = IndexMap::new();
         self.consume(Token::LeftCurlyBranckt)?;
 
         if self.assume(Token::RightCurlyBranckt) {
@@ -159,7 +161,9 @@ impl Parser {
 // Todo: add large json-text test
 #[cfg(test)]
 mod tests {
-    use std::collections::{HashMap, VecDeque};
+    use std::collections::VecDeque;
+
+    use indexmap::IndexMap;
 
     use crate::{
         parser::{Node, Parser},
@@ -219,7 +223,7 @@ mod tests {
 
         #[rustfmt::skip]
         let expected = Node::Object(
-            HashMap::from([
+            IndexMap::from([
                 ("elm1".to_string(), Node::Int(123)), 
                 ("elm2".to_string(), Node::Int(456)), 
                 ("elm3".to_string(), Node::JsonString("apple".to_string())), 
@@ -337,14 +341,14 @@ mod tests {
 
         #[rustfmt::skip]
         let expected = Node::Object(
-            HashMap::from([
+            IndexMap::from([
                 ("Image".to_string(), Node::Object(
-                        HashMap::from([
+                        IndexMap::from([
                             ("Width".to_string(), Node::Int(800)),
                             ("Height".to_string(), Node::Int(600)),
                             ("Title".to_string(), Node::JsonString("View from 15th Floor".to_string())),
                             ("Thumbnail".to_string(), Node::Object(
-                                    HashMap::from([
+                                    IndexMap::from([
                                         ("Url".to_string(), Node::JsonString("http://www.example.com/image/481989943".to_string())),
                                         ("Height".to_string(), Node::Int(125)),
                                         ("Width".to_string(), Node::Int(100)) 
