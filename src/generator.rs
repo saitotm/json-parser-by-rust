@@ -7,9 +7,14 @@ pub struct Generator {
 fn generate_impl(node: &Node) -> String {
     match node {
         Node::Int(num) => num.to_string(),
+        Node::JsonString(value) => generate_string(value),
         Node::Boolean(b) => b.to_string(),
         _ => unimplemented!(),
     }
+}
+
+fn generate_string(value: &str) -> String {
+    format!("\"{}\"", value)
 }
 
 impl Generator {
@@ -43,6 +48,14 @@ mod tests {
         let gen = Generator::new(node);
 
         assert_eq!(gen.generate(), "true");
+    }
+
+    #[test]
+    fn generate_string() {
+        let node = Node::JsonString("apple".to_string());
+        let gen = Generator::new(node);
+
+        assert_eq!(gen.generate(), "\"apple\"");
     }
 
     #[test]
