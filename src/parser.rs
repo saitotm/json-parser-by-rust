@@ -28,7 +28,7 @@ impl Parser {
     fn json_text(&mut self) -> Result<Node, String> {
         self.value()
     }
-    
+
     // Todo: fix to accpet null
     fn value(&mut self) -> Result<Node, String> {
         match self.front() {
@@ -37,7 +37,10 @@ impl Parser {
             Some(Token::Int(_)) => self.int(),
             Some(Token::JsonString(_)) => self.string(),
             Some(Token::Boolean(_)) => self.boolean(),
-            Some(token) => Err(format!("Parse found an unexpected token {:#?} while parsing value.", token)),
+            Some(token) => Err(format!(
+                "Parse found an unexpected token {:#?} while parsing value.",
+                token
+            )),
             None => Err("Parse found an unexpected token while parsing value.".to_string()),
         }
     }
@@ -45,14 +48,20 @@ impl Parser {
     fn consume(&mut self, token: Token) -> Result<(), String> {
         match self.pop() {
             Some(head) if head == token => Ok(()),
-            Some(head) => Err(format!("Expected a token {:#?}, but found an unexpected token {:#?}", token, head)),
+            Some(head) => Err(format!(
+                "Expected a token {:#?}, but found an unexpected token {:#?}",
+                token, head
+            )),
             None => Err(format!("Expected a token {:#?}", token)),
         }
     }
 
     fn assume(&mut self, token: Token) -> bool {
         match self.front() {
-            Some(head) if head == &token => { self.pop(); true },
+            Some(head) if head == &token => {
+                self.pop();
+                true
+            }
             _ => false,
         }
     }
@@ -80,7 +89,7 @@ impl Parser {
             if self.assume(Token::RightCurlyBranckt) {
                 break;
             }
-            
+
             self.consume(Token::Comma)?;
             let (key, value) = self.member()?;
             kvm.insert(key, value);
@@ -102,15 +111,21 @@ impl Parser {
         Ok((key, value))
     }
 
-    // Todo: add colon
     fn array(&mut self) -> Result<Node, String> {
         let mut values = Vec::new();
         self.consume(Token::LeftSquareBrancket)?;
+
+        if self.assume(Token::RightSquareBrancket) {
+            return Ok(Node::Array(values));
+        }
+
+        values.push(self.value()?);
 
         loop {
             if self.assume(Token::RightSquareBrancket) {
                 break;
             }
+            self.consume(Token::Comma)?;
 
             values.push(self.value()?);
         }
@@ -140,6 +155,8 @@ impl Parser {
     }
 }
 
+// Todo: add array test
+// Todo: add large json-text test
 #[cfg(test)]
 mod tests {
     use std::collections::{HashMap, VecDeque};
@@ -207,6 +224,141 @@ mod tests {
                 ("elm2".to_string(), Node::Int(456)), 
                 ("elm3".to_string(), Node::JsonString("apple".to_string())), 
                 ("elm4".to_string(), Node::Boolean(false))
+            ]));
+        let node = Parser::new(tokens).parse();
+
+        assert_eq!(node, Ok(expected));
+    }
+
+    #[test]
+    fn parse_array() {
+        let mut tokens = VecDeque::new();
+
+        tokens.push_back(Token::LeftSquareBrancket);
+
+        tokens.push_back(Token::Int(123));
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::Int(456));
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::JsonString("apple".to_string()));
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::Boolean(true));
+
+        tokens.push_back(Token::RightSquareBrancket);
+        tokens.push_back(Token::Eof);
+
+        #[rustfmt::skip]
+        let expected = Node::Array(
+            Vec::from([
+                Node::Int(123),
+                Node::Int(456),
+                Node::JsonString("apple".to_string()),
+                Node::Boolean(true)
+            ]));
+        let node = Parser::new(tokens).parse();
+
+        assert_eq!(node, Ok(expected));
+    }
+
+    #[test]
+    fn parse_large_json1() {
+        let mut tokens = VecDeque::new();
+
+        tokens.push_back(Token::LeftCurlyBranckt);
+        tokens.push_back(Token::JsonString("Image".to_string()));
+        tokens.push_back(Token::Colon);
+        tokens.push_back(Token::LeftCurlyBranckt);
+
+        tokens.push_back(Token::JsonString("Width".to_string()));
+        tokens.push_back(Token::Colon);
+        tokens.push_back(Token::Int(800));
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::JsonString("Height".to_string()));
+        tokens.push_back(Token::Colon);
+        tokens.push_back(Token::Int(600));
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::JsonString("Title".to_string()));
+        tokens.push_back(Token::Colon);
+        tokens.push_back(Token::JsonString("View from 15th Floor".to_string()));
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::JsonString("Thumbnail".to_string()));
+        tokens.push_back(Token::Colon);
+        tokens.push_back(Token::LeftCurlyBranckt);
+
+        tokens.push_back(Token::JsonString("Url".to_string()));
+        tokens.push_back(Token::Colon);
+        tokens.push_back(Token::JsonString(
+            "http://www.example.com/image/481989943".to_string(),
+        ));
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::JsonString("Height".to_string()));
+        tokens.push_back(Token::Colon);
+        tokens.push_back(Token::Int(125));
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::JsonString("Width".to_string()));
+        tokens.push_back(Token::Colon);
+        tokens.push_back(Token::Int(100));
+
+        tokens.push_back(Token::RightCurlyBranckt);
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::JsonString("Animated".to_string()));
+        tokens.push_back(Token::Colon);
+        tokens.push_back(Token::Boolean(false));
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::JsonString("IDs".to_string()));
+        tokens.push_back(Token::Colon);
+        tokens.push_back(Token::LeftSquareBrancket);
+
+        tokens.push_back(Token::Int(116));
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::Int(943));
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::Int(234));
+        tokens.push_back(Token::Comma);
+
+        tokens.push_back(Token::Int(38793));
+
+        tokens.push_back(Token::RightSquareBrancket);
+
+        tokens.push_back(Token::RightCurlyBranckt);
+        tokens.push_back(Token::RightCurlyBranckt);
+
+        #[rustfmt::skip]
+        let expected = Node::Object(
+            HashMap::from([
+                ("Image".to_string(), Node::Object(
+                        HashMap::from([
+                            ("Width".to_string(), Node::Int(800)),
+                            ("Height".to_string(), Node::Int(600)),
+                            ("Title".to_string(), Node::JsonString("View from 15th Floor".to_string())),
+                            ("Thumbnail".to_string(), Node::Object(
+                                    HashMap::from([
+                                        ("Url".to_string(), Node::JsonString("http://www.example.com/image/481989943".to_string())),
+                                        ("Height".to_string(), Node::Int(125)),
+                                        ("Width".to_string(), Node::Int(100)) 
+                                    ]))
+                            ),
+                            ("Animated".to_string(), Node::Boolean(false)),
+                            ("IDs".to_string(), Node::Array(Vec::from([
+                                    Node::Int(116),
+                                    Node::Int(943),
+                                    Node::Int(234),
+                                    Node::Int(38793) 
+                            ])))
+                        ])
+                ))
             ]));
         let node = Parser::new(tokens).parse();
 
