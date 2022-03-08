@@ -12,6 +12,7 @@ fn generate_impl(node: &Node) -> String {
         Node::JsonString(value) => generate_string(value),
         Node::Boolean(b) => b.to_string(),
         Node::Object(kvm) => generate_object(kvm),
+        Node::Array(arr) => generate_array(arr),
         _ => unimplemented!(),
     }
 }
@@ -40,6 +41,23 @@ fn generate_object_inner(kvm: &IndexMap<String, Node>) -> String {
 
 fn generate_object(kvm: &IndexMap<String, Node>) -> String {
     format!("{{\n{}\n}}", generate_object_inner(kvm))
+}
+
+fn generate_array(arr: &[Node]) -> String {
+    format!("[\n{}\n]", generate_array_inner(arr))
+}
+
+fn generate_array_inner(arr: &[Node]) -> String {
+    let mut inner = String::new();
+    for node in arr {
+        inner = format!("{}    {},\n", inner, generate_impl(node));
+    }
+
+    // delete the end of comma and \n
+    inner.pop();
+    inner.pop();
+
+    inner
 }
 
 impl Generator {
@@ -104,7 +122,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn generate_array() {
         let node = Node::Array(Vec::from([
             Node::Int(123),
@@ -122,7 +139,7 @@ mod tests {
                 r#"    123,"#,
                 r#"    456,"#,
                 r#"    "apple","#,
-                r#"    true,"#,
+                r#"    true"#,
                 r#"]"#
         ));
     }
