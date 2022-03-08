@@ -3,7 +3,7 @@ use std::collections::{HashMap, VecDeque};
 use crate::tokenizer::Token;
 
 #[derive(Debug, PartialEq, Eq)]
-enum Node {
+pub enum Node {
     Object(HashMap<String, Node>),
     Array(Vec<Node>),
     Boolean(bool),
@@ -12,7 +12,7 @@ enum Node {
     JsonString(String),
 }
 
-struct Parser {
+pub struct Parser {
     tokens: VecDeque<Token>,
 }
 
