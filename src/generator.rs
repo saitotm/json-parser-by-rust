@@ -2,34 +2,46 @@ use indexmap::IndexMap;
 
 use crate::parser::Node;
 
+const INDENT: &str = "    ";
+
 pub struct Generator {
     node: Node,
 }
 
-fn generate_impl(node: &Node) -> String {
+fn inc_indent(value: &str) -> String {
+    format!("{}{}", INDENT, value)
+}
+
+fn add_prefix(value: String, prefix: &str) -> String {
+    format!("{}{}", prefix, value)
+}
+
+fn generate_impl(node: &Node, prefix: &str) -> String {
     match node {
         Node::Int(num) => num.to_string(),
-        Node::JsonString(value) => generate_string(value),
+        Node::JsonString(value) => generate_string(value.to_string()),
         Node::Boolean(b) => b.to_string(),
-        Node::Object(kvm) => generate_object(kvm),
-        Node::Array(arr) => generate_array(arr),
-        _ => unimplemented!(),
+        Node::Object(kvm) => generate_object(kvm, prefix),
+        Node::Array(arr) => generate_array(arr, prefix),
     }
 }
 
-fn generate_string(value: &str) -> String {
+fn generate_string(value: String) -> String {
     format!("\"{}\"", value)
 }
 
-fn generate_object_inner(kvm: &IndexMap<String, Node>) -> String {
+fn generate_object_inner(kvm: &IndexMap<String, Node>, prefix: &str) -> String {
+    let new_prefix = inc_indent(prefix);
+
     let mut inner = String::new();
     for (key, node) in kvm {
-        inner = format!(
-            "{}    {}: {},\n",
-            inner,
-            generate_string(key),
-            generate_impl(node)
+        let member = format!(
+            "{}: {},\n",
+            generate_string(key.to_string()),
+            generate_impl(node, &new_prefix)
         );
+        let member = add_prefix(member, &new_prefix);
+        inner = format!("{}{}", inner, member);
     }
 
     // delete the end of comma and \n
@@ -39,18 +51,25 @@ fn generate_object_inner(kvm: &IndexMap<String, Node>) -> String {
     inner
 }
 
-fn generate_object(kvm: &IndexMap<String, Node>) -> String {
-    format!("{{\n{}\n}}", generate_object_inner(kvm))
+fn generate_object(kvm: &IndexMap<String, Node>, prefix: &str) -> String {
+    format!("{{\n{}\n{}}}", generate_object_inner(kvm, prefix), prefix)
 }
 
-fn generate_array(arr: &[Node]) -> String {
-    format!("[\n{}\n]", generate_array_inner(arr))
+fn generate_array(arr: &[Node], prefix: &str) -> String {
+    format!("[\n{}\n{}]", generate_array_inner(arr, prefix), prefix)
 }
 
-fn generate_array_inner(arr: &[Node]) -> String {
+fn generate_array_inner(arr: &[Node], prefix: &str) -> String {
+    let new_prefix = inc_indent(prefix);
+
     let mut inner = String::new();
     for node in arr {
-        inner = format!("{}    {},\n", inner, generate_impl(node));
+        let elm = add_prefix(generate_impl(node, &new_prefix), &new_prefix);
+        inner = format!(
+            "{}{},\n",
+            inner,
+            elm
+        );
     }
 
     // delete the end of comma and \n
@@ -66,7 +85,7 @@ impl Generator {
     }
 
     pub fn generate(&self) -> String {
-        generate_impl(&self.node)
+        generate_impl(&self.node, "")
     }
 }
 
@@ -145,7 +164,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn generate_large_json1() {
         #[rustfmt::skip]
         let node = Node::Object(
@@ -177,19 +195,24 @@ mod tests {
         #[rustfmt::skip]
         assert_eq!(
             gen.generate(),
-            format!("{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+            format!("{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
                 r#"{"#,
-                r#"  "Image": {"#,
-                r#"      "Width":  800,"#,
-                r#"      "Height": 600,"#,
-                r#"      "Title":  "View from 15th Floor","#,
-                r#"      "Thumbnail": {"#,
-                r#"          "Url":    "http://www.example.com/image/481989943","#,
-                r#"          "Height": 125,"#,
-                r#"          "Width":  100"#,
-                r#"      },"#,
-                r#"      "Animated" : false,"#,
-                r#"      "IDs": [116, 943, 234, 38793]"#,
+                r#"    "Image": {"#,
+                r#"        "Width": 800,"#,
+                r#"        "Height": 600,"#,
+                r#"        "Title": "View from 15th Floor","#,
+                r#"        "Thumbnail": {"#,
+                r#"            "Url": "http://www.example.com/image/481989943","#,
+                r#"            "Height": 125,"#,
+                r#"            "Width": 100"#,
+                r#"        },"#,
+                r#"        "Animated": false,"#,
+                r#"        "IDs": ["#,
+                r#"            116,"#, 
+                r#"            943,"#, 
+                r#"            234,"#, 
+                r#"            38793"#,
+                r#"        ]"#,
                 r#"    }"#,
                 r#"}"#,
         ));
