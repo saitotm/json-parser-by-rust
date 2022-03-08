@@ -65,11 +65,7 @@ fn generate_array_inner(arr: &[Node], prefix: &str) -> String {
     let mut inner = String::new();
     for node in arr {
         let elm = add_prefix(generate_impl(node, &new_prefix), &new_prefix);
-        inner = format!(
-            "{}{},\n",
-            inner,
-            elm
-        );
+        inner = format!("{}{},\n", inner, elm);
     }
 
     // delete the end of comma and \n
@@ -129,7 +125,7 @@ mod tests {
 
         #[rustfmt::skip]
         assert_eq!(
-            gen.generate(), 
+            gen.generate(),
             format!("{}\n{}\n{}\n{}\n{}\n{}",
                 r#"{"#,
                 r#"    "elm1": 123,"#,
