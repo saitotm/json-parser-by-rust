@@ -1,3 +1,5 @@
+use indexmap::IndexMap;
+
 use crate::parser::Node;
 
 pub struct Generator {
@@ -9,12 +11,35 @@ fn generate_impl(node: &Node) -> String {
         Node::Int(num) => num.to_string(),
         Node::JsonString(value) => generate_string(value),
         Node::Boolean(b) => b.to_string(),
+        Node::Object(kvm) => generate_object(kvm),
         _ => unimplemented!(),
     }
 }
 
 fn generate_string(value: &str) -> String {
     format!("\"{}\"", value)
+}
+
+fn generate_object_inner(kvm: &IndexMap<String, Node>) -> String {
+    let mut inner = String::new();
+    for (key, node) in kvm {
+        inner = format!(
+            "{}    {}: {},\n",
+            inner,
+            generate_string(key),
+            generate_impl(node)
+        );
+    }
+
+    // delete the end of comma and \n
+    inner.pop();
+    inner.pop();
+
+    inner
+}
+
+fn generate_object(kvm: &IndexMap<String, Node>) -> String {
+    format!("{{\n{}\n}}", generate_object_inner(kvm))
 }
 
 impl Generator {
@@ -25,13 +50,10 @@ impl Generator {
     pub fn generate(&self) -> String {
         generate_impl(&self.node)
     }
-
 }
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-
     use super::*;
 
     #[test]
@@ -59,9 +81,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn generate_object() {
-        let node = Node::Object(HashMap::from([
+        let node = Node::Object(IndexMap::from([
             ("elm1".to_string(), Node::Int(123)),
             ("elm2".to_string(), Node::Int(456)),
             ("elm3".to_string(), Node::JsonString("apple".to_string())),
@@ -77,7 +98,7 @@ mod tests {
                 r#"    "elm1": 123,"#,
                 r#"    "elm2": 456,"#,
                 r#"    "elm3": "apple","#,
-                r#"    "elm4": false,"#,
+                r#"    "elm4": false"#,
                 r#"}"#
         ));
     }
@@ -111,14 +132,14 @@ mod tests {
     fn generate_large_json1() {
         #[rustfmt::skip]
         let node = Node::Object(
-            HashMap::from([
+            IndexMap::from([
                 ("Image".to_string(), Node::Object(
-                        HashMap::from([
+                        IndexMap::from([
                             ("Width".to_string(), Node::Int(800)),
                             ("Height".to_string(), Node::Int(600)),
                             ("Title".to_string(), Node::JsonString("View from 15th Floor".to_string())),
                             ("Thumbnail".to_string(), Node::Object(
-                                    HashMap::from([
+                                    IndexMap::from([
                                         ("Url".to_string(), Node::JsonString("http://www.example.com/image/481989943".to_string())),
                                         ("Height".to_string(), Node::Int(125)),
                                         ("Width".to_string(), Node::Int(100)) 
