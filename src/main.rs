@@ -1,3 +1,4 @@
+mod generator;
 mod json_util;
 mod parser;
 mod tokenizer;
