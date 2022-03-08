@@ -7,6 +7,7 @@ pub struct Generator {
 fn generate_impl(node: &Node) -> String {
     match node {
         Node::Int(num) => num.to_string(),
+        Node::Boolean(b) => b.to_string(),
         _ => unimplemented!(),
     }
 }
@@ -37,7 +38,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn generate_boolean() {
         let node = Node::Boolean(true);
         let gen = Generator::new(node);
