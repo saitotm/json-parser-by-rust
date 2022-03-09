@@ -11,13 +11,12 @@ use tokenizer::Token;
 
 use crate::tokenizer::Tokenizer;
 
-/// Simple program to greet a person
+/// Simple lint for JSON text
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    /// Json  be pretty
-    #[clap(short, long)]
-    json: String,
+    /// JSON text which you want to lint
+    json_text: String,
 }
 
 fn pretty_json(json: String) -> Result<String, String> {
@@ -33,7 +32,7 @@ fn pretty_json(json: String) -> Result<String, String> {
 
 fn main() {
     let args = Args::parse();
-    match pretty_json(args.json) {
+    match pretty_json(args.json_text) {
         Ok(json) => println!("{}", json),
         Err(err) => eprintln!("Error: {}", err),
     }
