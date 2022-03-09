@@ -202,12 +202,14 @@ mod tests {
     // Todo: define a function or macro to determine whether two tokens are same or not.
 
     #[test]
+    #[rustfmt::skip]
     fn tokenize_empty() {
         let mut tokenizer = Tokenizer::new("");
         assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
     #[test]
+    #[rustfmt::skip]
     fn tokenize_zero() {
         let mut tokenizer = Tokenizer::new("0");
         assert_eq!(tokenizer.next_token(), Ok(Token::Int(0)));
@@ -215,6 +217,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn tokenize_int() {
         let mut tokenizer = Tokenizer::new("123");
         assert_eq!(tokenizer.next_token(), Ok(Token::Int(123)));
@@ -222,6 +225,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn tokenize_minus_int() {
         let mut tokenizer = Tokenizer::new("-123");
         assert_eq!(tokenizer.next_token(), Ok(Token::Int(-123)));
@@ -229,6 +233,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn tokenize_string() {
         let mut tokenizer = Tokenizer::new(r#""apple""#);
         assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("apple".to_string())));
@@ -236,6 +241,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn tokenize_true() {
         let mut tokenizer = Tokenizer::new(r#"true"#);
         assert_eq!(tokenizer.next_token(), Ok(Token::Boolean(true)));
@@ -243,6 +249,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn tokenize_false() {
         let mut tokenizer = Tokenizer::new(r#"false"#);
         assert_eq!(tokenizer.next_token(), Ok(Token::Boolean(false)));
@@ -250,6 +257,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn tokenzie_object() {
         let input = r#"{ "elm1" : 123, "elm2" : 456 , "elm3" : "apple", "elm4": false }"#;
         let mut tokenizer = Tokenizer::new(input);
@@ -279,6 +287,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn tokenzie_object_no_whitespaces() {
         let input = r#"{"elm1":123,"elm2":456,"elm3":"apple","elm4":false}"#;
         let mut tokenizer = Tokenizer::new(input);
@@ -308,6 +317,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn tokenize_list() {
         let input = r#"[ 123, 456 , "apple", true ]"#;
         let mut tokenizer = Tokenizer::new(input);
@@ -329,6 +339,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn tokenize_list_no_whitespaces() {
         let input = r#"[123,456,"apple",true]"#;
         let mut tokenizer = Tokenizer::new(input);
@@ -441,6 +452,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn tokenzie_with_iterator() {
         let input = r#"{ "elm1" : 123, "elm2" : 456 , "elm3" : "apple", "elm4": false }"#;
         let mut tokenizer = Tokenizer::new(input);
