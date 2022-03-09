@@ -20,15 +20,21 @@ struct Args {
     json: String,
 }
 
-fn main() {
-    let args = Args::parse();
-
-    let tokenizer = Tokenizer::new(args.json);
-    let tokens = tokenizer.collect::<Result<VecDeque<Token>, _>>().unwrap();
+fn pretty_json(json: String) -> Result<String, String> {
+    let tokenizer = Tokenizer::new(json);
+    let tokens = tokenizer.collect::<Result<VecDeque<Token>, _>>()?;
 
     let mut parser = parser::Parser::new(tokens);
-    let node = parser.parse().unwrap();
+    let node = parser.parse()?;
 
     let gen = Generator::new(node);
-    println!("{}", gen.generate());
+    Ok(gen.generate())
+}
+
+fn main() {
+    let args = Args::parse();
+    match pretty_json(args.json) {
+        Ok(json) => println!("{}", json),
+        Err(err) => eprintln!("Error: {}", err),
+    }
 }
