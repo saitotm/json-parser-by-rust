@@ -20,7 +20,6 @@ pub enum Token {
 
 pub struct Tokenizer {
     input: VecDeque<char>,
-    cur: usize,
 }
 
 impl Iterator for Tokenizer {
@@ -36,8 +35,8 @@ impl Iterator for Tokenizer {
 
 impl Tokenizer {
     pub fn new<S: Into<String>>(input: S) -> Self {
-        let mut input = input.into().chars().collect::<VecDeque<char>>();
-        Self { input, cur: 0 }
+        let input = input.into().chars().collect::<VecDeque<char>>();
+        Self { input }
     }
 
     pub fn next_token(&mut self) -> Result<Token, String> {
