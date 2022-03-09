@@ -1,4 +1,5 @@
 // Todo: add option to specify indent (space or tab, count)
+// Todo: add cui usage to README.md
 mod generator;
 mod json_util;
 mod parser;
