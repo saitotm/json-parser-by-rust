@@ -23,13 +23,24 @@ pub struct Tokenizer {
     cur: usize,
 }
 
+impl Iterator for Tokenizer {
+    type Item = Result<Token, String>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.next_token() {
+            Ok(Token::Eof) => None,
+            result => Some(result),
+        }
+    }
+}
+
 impl Tokenizer {
     pub fn new<S: Into<String>>(input: S) -> Self {
         let mut input = input.into().chars().collect::<VecDeque<char>>();
         Self { input, cur: 0 }
     }
 
-    pub fn next(&mut self) -> Result<Token, String> {
+    pub fn next_token(&mut self) -> Result<Token, String> {
         self.skip_whitespaces();
 
         match self.front() {
@@ -194,128 +205,128 @@ mod tests {
     #[test]
     fn tokenize_empty() {
         let mut tokenizer = Tokenizer::new("");
-        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenize_zero() {
         let mut tokenizer = Tokenizer::new("0");
-        assert_eq!(tokenizer.next(), Ok(Token::Int(0)));
-        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(0)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenize_int() {
         let mut tokenizer = Tokenizer::new("123");
-        assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
-        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenize_minus_int() {
         let mut tokenizer = Tokenizer::new("-123");
-        assert_eq!(tokenizer.next(), Ok(Token::Int(-123)));
-        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(-123)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenize_string() {
         let mut tokenizer = Tokenizer::new(r#""apple""#);
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("apple".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenize_true() {
         let mut tokenizer = Tokenizer::new(r#"true"#);
-        assert_eq!(tokenizer.next(), Ok(Token::Boolean(true)));
-        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Boolean(true)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenize_false() {
         let mut tokenizer = Tokenizer::new(r#"false"#);
-        assert_eq!(tokenizer.next(), Ok(Token::Boolean(false)));
-        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Boolean(false)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenzie_object() {
         let input = r#"{ "elm1" : 123, "elm2" : 456 , "elm3" : "apple", "elm4": false }"#;
         let mut tokenizer = Tokenizer::new(input);
-        assert_eq!(tokenizer.next(), Ok(Token::LeftCurlyBranckt));
+        assert_eq!(tokenizer.next_token(), Ok(Token::LeftCurlyBranckt));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm1".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("elm1".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm2".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::Int(456)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("elm2".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(456)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm3".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("elm3".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("apple".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm4".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::Boolean(false)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("elm4".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Boolean(false)));
 
-        assert_eq!(tokenizer.next(), Ok(Token::RightCurlyBranckt));
-        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+        assert_eq!(tokenizer.next_token(), Ok(Token::RightCurlyBranckt));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenzie_object_no_whitespaces() {
         let input = r#"{"elm1":123,"elm2":456,"elm3":"apple","elm4":false}"#;
         let mut tokenizer = Tokenizer::new(input);
-        assert_eq!(tokenizer.next(), Ok(Token::LeftCurlyBranckt));
+        assert_eq!(tokenizer.next_token(), Ok(Token::LeftCurlyBranckt));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm1".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("elm1".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm2".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::Int(456)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("elm2".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(456)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm3".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("elm3".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("apple".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("elm4".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::Boolean(false)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("elm4".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Boolean(false)));
 
-        assert_eq!(tokenizer.next(), Ok(Token::RightCurlyBranckt));
-        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+        assert_eq!(tokenizer.next_token(), Ok(Token::RightCurlyBranckt));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
     #[test]
     fn tokenize_list() {
         let input = r#"[ 123, 456 , "apple", true ]"#;
         let mut tokenizer = Tokenizer::new(input);
-        assert_eq!(tokenizer.next(), Ok(Token::LeftSquareBrancket));
+        assert_eq!(tokenizer.next_token(), Ok(Token::LeftSquareBrancket));
 
-        assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::Int(456)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(456)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("apple".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::Boolean(true)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Boolean(true)));
 
-        assert_eq!(tokenizer.next(), Ok(Token::RightSquareBrancket));
-        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+        assert_eq!(tokenizer.next_token(), Ok(Token::RightSquareBrancket));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
     #[test]
@@ -323,21 +334,21 @@ mod tests {
         let input = r#"[123,456,"apple",true]"#;
         let mut tokenizer = Tokenizer::new(input);
 
-        assert_eq!(tokenizer.next(), Ok(Token::LeftSquareBrancket));
+        assert_eq!(tokenizer.next_token(), Ok(Token::LeftSquareBrancket));
 
-        assert_eq!(tokenizer.next(), Ok(Token::Int(123)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::Int(456)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(456)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("apple".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("apple".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::Boolean(true)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Boolean(true)));
 
-        assert_eq!(tokenizer.next(), Ok(Token::RightSquareBrancket));
-        assert_eq!(tokenizer.next(), Ok(Token::Eof));
+        assert_eq!(tokenizer.next_token(), Ok(Token::RightSquareBrancket));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
     #[test]
@@ -362,71 +373,100 @@ mod tests {
         );
 
         let mut tokenizer = Tokenizer::new(input);
-        assert_eq!(tokenizer.next(), Ok(Token::LeftCurlyBranckt));
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Image".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::LeftCurlyBranckt));
+        assert_eq!(tokenizer.next_token(), Ok(Token::LeftCurlyBranckt));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("Image".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::LeftCurlyBranckt));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Width".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::Int(800)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("Width".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(800)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Height".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::Int(600)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("Height".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(600)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Title".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("View from 15th Floor".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("Title".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("View from 15th Floor".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Thumbnail".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::LeftCurlyBranckt));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("Thumbnail".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::LeftCurlyBranckt));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Url".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("http://www.example.com/image/481989943".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("Url".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("http://www.example.com/image/481989943".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Height".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::Int(125)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("Height".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(125)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Width".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::Int(100)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("Width".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(100)));
 
-        assert_eq!(tokenizer.next(), Ok(Token::RightCurlyBranckt));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::RightCurlyBranckt));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("Animated".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next(), Ok(Token::Boolean(false)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("Animated".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Boolean(false)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::JsonString("IDs".to_string())));
-        assert_eq!(tokenizer.next(), Ok(Token::Colon));
+        assert_eq!(tokenizer.next_token(), Ok(Token::JsonString("IDs".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
 
-        assert_eq!(tokenizer.next(), Ok(Token::LeftSquareBrancket));
+        assert_eq!(tokenizer.next_token(), Ok(Token::LeftSquareBrancket));
 
-        assert_eq!(tokenizer.next(), Ok(Token::Int(116)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(116)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::Int(943)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(943)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::Int(234)));
-        assert_eq!(tokenizer.next(), Ok(Token::Comma));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(234)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next(), Ok(Token::Int(38793)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Int(38793)));
 
-        assert_eq!(tokenizer.next(), Ok(Token::RightSquareBrancket));
+        assert_eq!(tokenizer.next_token(), Ok(Token::RightSquareBrancket));
 
-        assert_eq!(tokenizer.next(), Ok(Token::RightCurlyBranckt));
-        assert_eq!(tokenizer.next(), Ok(Token::RightCurlyBranckt));
+        assert_eq!(tokenizer.next_token(), Ok(Token::RightCurlyBranckt));
+        assert_eq!(tokenizer.next_token(), Ok(Token::RightCurlyBranckt));
+    }
+
+    #[test]
+    fn tokenzie_with_iterator() {
+        let input = r#"{ "elm1" : 123, "elm2" : 456 , "elm3" : "apple", "elm4": false }"#;
+        let mut tokenizer = Tokenizer::new(input);
+        assert_eq!(tokenizer.next(), Some(Ok(Token::LeftCurlyBranckt)));
+
+        assert_eq!(tokenizer.next(), Some(Ok(Token::JsonString("elm1".to_string()))));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::Colon)));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::Int(123))));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::Comma)));
+
+        assert_eq!(tokenizer.next(), Some(Ok(Token::JsonString("elm2".to_string()))));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::Colon)));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::Int(456))));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::Comma)));
+
+        assert_eq!(tokenizer.next(), Some(Ok(Token::JsonString("elm3".to_string()))));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::Colon)));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::JsonString("apple".to_string()))));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::Comma)));
+
+        assert_eq!(tokenizer.next(), Some(Ok(Token::JsonString("elm4".to_string()))));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::Colon)));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::Boolean(false))));
+
+        assert_eq!(tokenizer.next(), Some(Ok(Token::RightCurlyBranckt)));
+        assert_eq!(tokenizer.next(), None);
     }
 }
