@@ -157,8 +157,6 @@ impl Parser {
     }
 }
 
-// Todo: add array test
-// Todo: add large json-text test
 #[cfg(test)]
 mod tests {
     use std::collections::VecDeque;
