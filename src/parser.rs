@@ -32,7 +32,6 @@ impl Parser {
         self.value()
     }
 
-    // Todo: fix to accpet null
     fn value(&mut self) -> Result<Node, String> {
         match self.front() {
             Some(Token::LeftCurlyBranckt) => self.object(),
