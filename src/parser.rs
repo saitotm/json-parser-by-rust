@@ -12,7 +12,7 @@ pub enum Node {
     Boolean(bool),
     Int(i64),
     // Float(f64),
-    JsonString(String),
+    String(String),
 }
 
 pub struct Parser {
@@ -38,7 +38,7 @@ impl Parser {
             Some(Token::LeftCurlyBranckt) => self.object(),
             Some(Token::LeftSquareBrancket) => self.array(),
             Some(Token::Int(_)) => self.int(),
-            Some(Token::JsonString(_)) => self.string(),
+            Some(Token::String(_)) => self.string(),
             Some(Token::Boolean(_)) => self.boolean(),
             Some(Token::Null) => self.null(),
             Some(token) => Err(format!(
@@ -104,7 +104,7 @@ impl Parser {
 
     fn member(&mut self) -> Result<(String, Node), String> {
         let key = match self.string()? {
-            Node::JsonString(value) => value,
+            Node::String(value) => value,
             _ => unreachable!(),
         };
 
@@ -160,7 +160,7 @@ impl Parser {
 
     fn string(&mut self) -> Result<Node, String> {
         match self.pop() {
-            Some(Token::JsonString(value)) => Ok(Node::JsonString(value)),
+            Some(Token::String(value)) => Ok(Node::String(value)),
             _ => Err("Parse found an unexpected token while parsing string.".to_string()),
         }
     }
@@ -218,22 +218,22 @@ mod tests {
         let mut tokens = VecDeque::new();
         tokens.push_back(Token::LeftCurlyBranckt);
 
-        tokens.push_back(Token::JsonString("elm1".to_string()));
+        tokens.push_back(Token::String("elm1".to_string()));
         tokens.push_back(Token::Colon);
         tokens.push_back(Token::Int(123));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::JsonString("elm2".to_string()));
+        tokens.push_back(Token::String("elm2".to_string()));
         tokens.push_back(Token::Colon);
         tokens.push_back(Token::Int(456));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::JsonString("elm3".to_string()));
+        tokens.push_back(Token::String("elm3".to_string()));
         tokens.push_back(Token::Colon);
-        tokens.push_back(Token::JsonString("apple".to_string()));
+        tokens.push_back(Token::String("apple".to_string()));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::JsonString("elm4".to_string()));
+        tokens.push_back(Token::String("elm4".to_string()));
         tokens.push_back(Token::Colon);
         tokens.push_back(Token::Boolean(false));
 
@@ -245,7 +245,7 @@ mod tests {
             IndexMap::from([
                 ("elm1".to_string(), Node::Int(123)), 
                 ("elm2".to_string(), Node::Int(456)), 
-                ("elm3".to_string(), Node::JsonString("apple".to_string())), 
+                ("elm3".to_string(), Node::String("apple".to_string())), 
                 ("elm4".to_string(), Node::Boolean(false))
             ]));
         let node = Parser::new(tokens).parse();
@@ -265,7 +265,7 @@ mod tests {
         tokens.push_back(Token::Int(456));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::JsonString("apple".to_string()));
+        tokens.push_back(Token::String("apple".to_string()));
         tokens.push_back(Token::Comma);
 
         tokens.push_back(Token::Boolean(true));
@@ -278,7 +278,7 @@ mod tests {
             Vec::from([
                 Node::Int(123),
                 Node::Int(456),
-                Node::JsonString("apple".to_string()),
+                Node::String("apple".to_string()),
                 Node::Boolean(true)
             ]));
         let node = Parser::new(tokens).parse();
@@ -291,54 +291,54 @@ mod tests {
         let mut tokens = VecDeque::new();
 
         tokens.push_back(Token::LeftCurlyBranckt);
-        tokens.push_back(Token::JsonString("Image".to_string()));
+        tokens.push_back(Token::String("Image".to_string()));
         tokens.push_back(Token::Colon);
         tokens.push_back(Token::LeftCurlyBranckt);
 
-        tokens.push_back(Token::JsonString("Width".to_string()));
+        tokens.push_back(Token::String("Width".to_string()));
         tokens.push_back(Token::Colon);
         tokens.push_back(Token::Int(800));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::JsonString("Height".to_string()));
+        tokens.push_back(Token::String("Height".to_string()));
         tokens.push_back(Token::Colon);
         tokens.push_back(Token::Int(600));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::JsonString("Title".to_string()));
+        tokens.push_back(Token::String("Title".to_string()));
         tokens.push_back(Token::Colon);
-        tokens.push_back(Token::JsonString("View from 15th Floor".to_string()));
+        tokens.push_back(Token::String("View from 15th Floor".to_string()));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::JsonString("Thumbnail".to_string()));
+        tokens.push_back(Token::String("Thumbnail".to_string()));
         tokens.push_back(Token::Colon);
         tokens.push_back(Token::LeftCurlyBranckt);
 
-        tokens.push_back(Token::JsonString("Url".to_string()));
+        tokens.push_back(Token::String("Url".to_string()));
         tokens.push_back(Token::Colon);
-        tokens.push_back(Token::JsonString(
+        tokens.push_back(Token::String(
             "http://www.example.com/image/481989943".to_string(),
         ));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::JsonString("Height".to_string()));
+        tokens.push_back(Token::String("Height".to_string()));
         tokens.push_back(Token::Colon);
         tokens.push_back(Token::Int(125));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::JsonString("Width".to_string()));
+        tokens.push_back(Token::String("Width".to_string()));
         tokens.push_back(Token::Colon);
         tokens.push_back(Token::Int(100));
 
         tokens.push_back(Token::RightCurlyBranckt);
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::JsonString("Animated".to_string()));
+        tokens.push_back(Token::String("Animated".to_string()));
         tokens.push_back(Token::Colon);
         tokens.push_back(Token::Boolean(false));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::JsonString("IDs".to_string()));
+        tokens.push_back(Token::String("IDs".to_string()));
         tokens.push_back(Token::Colon);
         tokens.push_back(Token::LeftSquareBrancket);
 
@@ -365,10 +365,10 @@ mod tests {
                         IndexMap::from([
                             ("Width".to_string(), Node::Int(800)),
                             ("Height".to_string(), Node::Int(600)),
-                            ("Title".to_string(), Node::JsonString("View from 15th Floor".to_string())),
+                            ("Title".to_string(), Node::String("View from 15th Floor".to_string())),
                             ("Thumbnail".to_string(), Node::Object(
                                     IndexMap::from([
-                                        ("Url".to_string(), Node::JsonString("http://www.example.com/image/481989943".to_string())),
+                                        ("Url".to_string(), Node::String("http://www.example.com/image/481989943".to_string())),
                                         ("Height".to_string(), Node::Int(125)),
                                         ("Width".to_string(), Node::Int(100)) 
                                     ]))

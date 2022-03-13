@@ -20,7 +20,7 @@ fn generate_impl(node: &Node, prefix: &str) -> String {
     match node {
         Node::Null => "null".to_string(),
         Node::Int(num) => num.to_string(),
-        Node::JsonString(value) => generate_string(value.to_string()),
+        Node::String(value) => generate_string(value.to_string()),
         Node::Boolean(b) => b.to_string(),
         Node::Object(kvm) => generate_object(kvm, prefix),
         Node::Array(arr) => generate_array(arr, prefix),
@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn generate_string() {
-        let node = Node::JsonString("apple".to_string());
+        let node = Node::String("apple".to_string());
         let gen = Generator::new(node);
 
         assert_eq!(gen.generate(), "\"apple\"");
@@ -127,7 +127,7 @@ mod tests {
         let node = Node::Object(IndexMap::from([
             ("elm1".to_string(), Node::Int(123)),
             ("elm2".to_string(), Node::Int(456)),
-            ("elm3".to_string(), Node::JsonString("apple".to_string())),
+            ("elm3".to_string(), Node::String("apple".to_string())),
             ("elm4".to_string(), Node::Boolean(false)),
         ]));
         let gen = Generator::new(node);
@@ -150,7 +150,7 @@ mod tests {
         let node = Node::Array(Vec::from([
             Node::Int(123),
             Node::Int(456),
-            Node::JsonString("apple".to_string()),
+            Node::String("apple".to_string()),
             Node::Boolean(true),
         ]));
         let gen = Generator::new(node);
@@ -177,10 +177,10 @@ mod tests {
                         IndexMap::from([
                             ("Width".to_string(), Node::Int(800)),
                             ("Height".to_string(), Node::Int(600)),
-                            ("Title".to_string(), Node::JsonString("View from 15th Floor".to_string())),
+                            ("Title".to_string(), Node::String("View from 15th Floor".to_string())),
                             ("Thumbnail".to_string(), Node::Object(
                                     IndexMap::from([
-                                        ("Url".to_string(), Node::JsonString("http://www.example.com/image/481989943".to_string())),
+                                        ("Url".to_string(), Node::String("http://www.example.com/image/481989943".to_string())),
                                         ("Height".to_string(), Node::Int(125)),
                                         ("Width".to_string(), Node::Int(100)) 
                                     ]))
