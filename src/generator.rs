@@ -18,6 +18,7 @@ fn add_prefix(value: String, prefix: &str) -> String {
 
 fn generate_impl(node: &Node, prefix: &str) -> String {
     match node {
+        Node::Null => "null".to_string(),
         Node::Int(num) => num.to_string(),
         Node::JsonString(value) => generate_string(value.to_string()),
         Node::Boolean(b) => b.to_string(),
@@ -111,6 +112,14 @@ mod tests {
         let gen = Generator::new(node);
 
         assert_eq!(gen.generate(), "\"apple\"");
+    }
+
+    #[test]
+    fn generate_null() {
+        let node = Node::Null;
+        let gen = Generator::new(node);
+
+        assert_eq!(gen.generate(), "null");
     }
 
     #[test]

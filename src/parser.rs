@@ -6,6 +6,7 @@ use crate::tokenizer::Token;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Node {
+    Null,
     Object(IndexMap<String, Node>),
     Array(Vec<Node>),
     Boolean(bool),
@@ -39,6 +40,7 @@ impl Parser {
             Some(Token::Int(_)) => self.int(),
             Some(Token::JsonString(_)) => self.string(),
             Some(Token::Boolean(_)) => self.boolean(),
+            Some(Token::Null) => self.null(),
             Some(token) => Err(format!(
                 "Parse found an unexpected token {:#?} while parsing value.",
                 token
@@ -149,6 +151,13 @@ impl Parser {
         }
     }
 
+    fn null(&mut self) -> Result<Node, String> {
+        match self.pop() {
+            Some(Token::Null) => Ok(Node::Null),
+            _ => Err("Parse found an unexpected token while parsing null.".to_string()),
+        }
+    }
+
     fn string(&mut self) -> Result<Node, String> {
         match self.pop() {
             Some(Token::JsonString(value)) => Ok(Node::JsonString(value)),
@@ -187,6 +196,18 @@ mod tests {
         tokens.push_back(Token::Eof);
 
         let expected = Node::Boolean(true);
+        let node = Parser::new(tokens).parse();
+
+        assert_eq!(node, Ok(expected));
+    }
+
+    #[test]
+    fn parse_null() {
+        let mut tokens = VecDeque::new();
+        tokens.push_back(Token::Null);
+        tokens.push_back(Token::Eof);
+
+        let expected = Node::Null;
         let node = Parser::new(tokens).parse();
 
         assert_eq!(node, Ok(expected));

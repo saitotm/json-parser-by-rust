@@ -5,6 +5,7 @@ use crate::json_util;
 // Todo: remove PartialEq and Eq to add Float
 #[derive(Debug, PartialEq, Eq)]
 pub enum Token {
+    Null,
     Int(i64),
     // Float(f64),
     JsonString(String),
@@ -72,6 +73,7 @@ impl Tokenizer {
             Some('\"') => self.tokenize_string(),
             Some('t') => self.tokenize_true(),
             Some('f') => self.tokenize_false(),
+            Some('n') => self.tokenize_null(),
             None => Ok(Token::Eof),
             Some(c) => Err(format!(
                 "The tokenizer found an unexpected character \'{:}\'.",
@@ -145,6 +147,15 @@ impl Tokenizer {
         self.consume('e')?;
 
         Ok(Token::Boolean(false))
+    }
+
+    fn tokenize_null(&mut self) -> Result<Token, String> {
+        self.consume('n')?;
+        self.consume('u')?;
+        self.consume('l')?;
+        self.consume('l')?;
+
+        Ok(Token::Null)
     }
 
     // Todo: make the return type Result<i64, String>.
@@ -253,6 +264,14 @@ mod tests {
     fn tokenize_false() {
         let mut tokenizer = Tokenizer::new(r#"false"#);
         assert_eq!(tokenizer.next_token(), Ok(Token::Boolean(false)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn tokenize_null() {
+        let mut tokenizer = Tokenizer::new(r#"null"#);
+        assert_eq!(tokenizer.next_token(), Ok(Token::Null));
         assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
