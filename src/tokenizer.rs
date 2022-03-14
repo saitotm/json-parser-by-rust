@@ -120,11 +120,11 @@ impl Tokenizer {
             //Some('0') => Err("The head of number must not be zero"),
             Some('-') => {
                 self.pop();
-                let num = self.read_digits();
+                let num = self.read_digits()?;
                 Ok(Token::Int(-num))
             }
             _ => {
-                let num = self.read_digits();
+                let num = self.read_digits()?;
                 Ok(Token::Int(num))
             }
         }
@@ -158,15 +158,16 @@ impl Tokenizer {
         Ok(Token::Null)
     }
 
-    // Todo: make the return type Result<i64, String>.
-    fn read_digits(&mut self) -> i64 {
+    fn read_digits(&mut self) -> Result<i64, String> {
         let mut digits = String::new();
 
         while let Some(c) = self.pop_digit() {
             digits.push(c)
         }
 
-        digits.parse().expect("digits must represent number.")
+        digits
+            .parse()
+            .map_err(|_| "digits must represent number.".to_string())
     }
 
     fn consume(&mut self, c: char) -> Result<char, String> {
