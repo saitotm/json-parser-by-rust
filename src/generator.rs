@@ -2,87 +2,86 @@ use indexmap::IndexMap;
 
 use crate::parser::Node;
 
-const INDENT: &str = "    ";
-
 pub struct Generator {
     node: Node,
-}
-
-fn inc_indent(value: &str) -> String {
-    format!("{}{}", INDENT, value)
-}
-
-fn add_prefix(value: String, prefix: &str) -> String {
-    format!("{}{}", prefix, value)
-}
-
-fn generate_impl(node: &Node, prefix: &str) -> String {
-    match node {
-        Node::Null => "null".to_string(),
-        Node::Int(num) => num.to_string(),
-        Node::String(value) => generate_string(value.to_string()),
-        Node::Boolean(b) => b.to_string(),
-        Node::Object(kvm) => generate_object(kvm, prefix),
-        Node::Array(arr) => generate_array(arr, prefix),
-    }
-}
-
-fn generate_string(value: String) -> String {
-    format!("\"{}\"", value)
-}
-
-fn generate_object_inner(kvm: &IndexMap<String, Node>, prefix: &str) -> String {
-    let new_prefix = inc_indent(prefix);
-
-    let mut inner = String::new();
-    for (key, node) in kvm {
-        let member = format!(
-            "{}: {},\n",
-            generate_string(key.to_string()),
-            generate_impl(node, &new_prefix)
-        );
-        let member = add_prefix(member, &new_prefix);
-        inner = format!("{}{}", inner, member);
-    }
-
-    // delete the end of comma and \n
-    inner.pop();
-    inner.pop();
-
-    inner
-}
-
-fn generate_object(kvm: &IndexMap<String, Node>, prefix: &str) -> String {
-    format!("{{\n{}\n{}}}", generate_object_inner(kvm, prefix), prefix)
-}
-
-fn generate_array(arr: &[Node], prefix: &str) -> String {
-    format!("[\n{}\n{}]", generate_array_inner(arr, prefix), prefix)
-}
-
-fn generate_array_inner(arr: &[Node], prefix: &str) -> String {
-    let new_prefix = inc_indent(prefix);
-
-    let mut inner = String::new();
-    for node in arr {
-        let elm = add_prefix(generate_impl(node, &new_prefix), &new_prefix);
-        inner = format!("{}{},\n", inner, elm);
-    }
-
-    // delete the end of comma and \n
-    inner.pop();
-    inner.pop();
-
-    inner
+    indent_size: usize,
 }
 
 impl Generator {
-    pub fn new(node: Node) -> Self {
-        Self { node }
+    pub fn new(node: Node, indent_size: usize) -> Self {
+        Self { node, indent_size }
     }
 
     pub fn generate(&self) -> String {
-        generate_impl(&self.node, "")
+        self.generate_impl(&self.node, "")
+    }
+
+    fn inc_indent(&self, value: &str, indent_size: usize) -> String {
+        format!("{}{}", " ".repeat(indent_size), value)
+    }
+
+    fn add_prefix(&self, value: String, prefix: &str) -> String {
+        format!("{}{}", prefix, value)
+    }
+
+    fn generate_impl(&self, node: &Node, prefix: &str) -> String {
+        match node {
+            Node::Null => "null".to_string(),
+            Node::Int(num) => num.to_string(),
+            Node::String(value) => self.generate_string(value.to_string()),
+            Node::Boolean(b) => b.to_string(),
+            Node::Object(kvm) => self.generate_object(kvm, prefix),
+            Node::Array(arr) => self.generate_array(arr, prefix),
+        }
+    }
+
+    fn generate_string(&self, value: String) -> String {
+        format!("\"{}\"", value)
+    }
+
+    fn generate_object_inner(&self, kvm: &IndexMap<String, Node>, prefix: &str) -> String {
+        let new_prefix = self.inc_indent(prefix, self.indent_size);
+
+        let mut inner = String::new();
+        for (key, node) in kvm {
+            let member = format!(
+                "{}: {},\n",
+                self.generate_string(key.to_string()),
+                self.generate_impl(node, &new_prefix)
+            );
+            let member = self.add_prefix(member, &new_prefix);
+            inner = format!("{}{}", inner, member);
+        }
+
+        // delete the end of comma and \n
+        inner.pop();
+        inner.pop();
+
+        inner
+    }
+
+    fn generate_object(&self, kvm: &IndexMap<String, Node>, prefix: &str) -> String {
+        format!("{{\n{}\n{}}}", self.generate_object_inner(kvm, prefix), prefix)
+    }
+
+    fn generate_array(&self, arr: &[Node], prefix: &str) -> String {
+        format!("[\n{}\n{}]", self.generate_array_inner(arr, prefix), prefix)
+    }
+
+    fn generate_array_inner(&self, arr: &[Node], prefix: &str) -> String {
+        let new_prefix = self.inc_indent(prefix, self.indent_size);
+
+        let mut inner = String::new();
+        for node in arr {
+            let elm = self.add_prefix(self.generate_impl(node, &new_prefix), &new_prefix);
+            inner = format!("{}{},\n", inner, elm);
+        }
+
+        // delete the end of comma and \n
+        inner.pop();
+        inner.pop();
+
+        inner
     }
 }
 
@@ -93,7 +92,7 @@ mod tests {
     #[test]
     fn generate_int() {
         let node = Node::Int(123);
-        let gen = Generator::new(node);
+        let gen = Generator::new(node, 4);
 
         assert_eq!(gen.generate(), "123");
     }
@@ -101,7 +100,7 @@ mod tests {
     #[test]
     fn generate_boolean() {
         let node = Node::Boolean(true);
-        let gen = Generator::new(node);
+        let gen = Generator::new(node, 4);
 
         assert_eq!(gen.generate(), "true");
     }
@@ -109,7 +108,7 @@ mod tests {
     #[test]
     fn generate_string() {
         let node = Node::String("apple".to_string());
-        let gen = Generator::new(node);
+        let gen = Generator::new(node, 4);
 
         assert_eq!(gen.generate(), "\"apple\"");
     }
@@ -117,7 +116,7 @@ mod tests {
     #[test]
     fn generate_null() {
         let node = Node::Null;
-        let gen = Generator::new(node);
+        let gen = Generator::new(node, 4);
 
         assert_eq!(gen.generate(), "null");
     }
@@ -130,7 +129,7 @@ mod tests {
             ("elm3".to_string(), Node::String("apple".to_string())),
             ("elm4".to_string(), Node::Boolean(false)),
         ]));
-        let gen = Generator::new(node);
+        let gen = Generator::new(node, 4);
 
         #[rustfmt::skip]
         assert_eq!(
@@ -153,7 +152,7 @@ mod tests {
             Node::String("apple".to_string()),
             Node::Boolean(true),
         ]));
-        let gen = Generator::new(node);
+        let gen = Generator::new(node, 4);
 
         #[rustfmt::skip]
         assert_eq!(
@@ -195,7 +194,7 @@ mod tests {
                         ])
                 ))
             ]));
-        let gen = Generator::new(node);
+        let gen = Generator::new(node, 4);
 
         #[rustfmt::skip]
         assert_eq!(
