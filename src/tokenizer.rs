@@ -112,20 +112,35 @@ impl Tokenizer {
         Ok(Token::String(ident))
     }
 
-    //Todo: fix to accpet float values
     fn tokenize_number(&mut self) -> Result<Token, String> {
         match self.front() {
             //Some('0') => Err("The head of number must not be zero"),
             Some('-') => {
                 self.pop();
-                let num = self.read_digits()?;
-                Ok(Token::Number((-num).to_string()))
+                let num = self.read_positive_number()?;
+                Ok(Token::Number(format!("-{}", num)))
             }
             _ => {
-                let num = self.read_digits()?;
-                Ok(Token::Number(num.to_string()))
+                let num = self.read_positive_number()?;
+                Ok(Token::Number(num))
             }
         }
+    }
+
+    fn read_positive_number(&mut self) -> Result<String, String> {
+        let mut number = String::new();
+
+        while let Some(c) = self.pop_digit_or_dot() {
+            number.push(c)
+        }
+
+        while let Some(c) = self.pop_digit() {
+            number.push(c)
+        }
+
+        number
+            .parse()
+            .map_err(|_| "digits must represent number.".to_string())
     }
 
     fn tokenize_true(&mut self) -> Result<Token, String> {
@@ -156,18 +171,6 @@ impl Tokenizer {
         Ok(Token::Null)
     }
 
-    fn read_digits(&mut self) -> Result<i64, String> {
-        let mut digits = String::new();
-
-        while let Some(c) = self.pop_digit() {
-            digits.push(c)
-        }
-
-        digits
-            .parse()
-            .map_err(|_| "digits must represent number.".to_string())
-    }
-
     fn consume(&mut self, c: char) -> Result<char, String> {
         match self.pop() {
             Some(top) if top == c => Ok(top),
@@ -190,6 +193,14 @@ impl Tokenizer {
     fn pop_digit(&mut self) -> Option<char> {
         match self.front() {
             Some(c) if c.is_ascii_digit() => self.pop(),
+            _ => None,
+        }
+    }
+
+    fn pop_digit_or_dot(&mut self) -> Option<char> {
+        match self.front() {
+            Some(c) if c.is_ascii_digit() => self.pop(),
+            Some('.') => self.pop(),
             _ => None,
         }
     }
@@ -244,6 +255,22 @@ mod tests {
 
     #[test]
     #[rustfmt::skip]
+    fn tokenize_float() {
+        let mut tokenizer = Tokenizer::new("3.14159265");
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("3.14159265".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn tokenize_minus_float() {
+        let mut tokenizer = Tokenizer::new("-3.14159265");
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("-3.14159265".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
+    }
+
+    #[test]
+    #[rustfmt::skip]
     fn tokenize_string() {
         let mut tokenizer = Tokenizer::new(r#""apple""#);
         assert_eq!(tokenizer.next_token(), Ok(Token::String("apple".to_string())));
@@ -277,7 +304,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn tokenzie_object() {
-        let input = r#"{ "elm1" : 123, "elm2" : 456 , "elm3" : "apple", "elm4": false }"#;
+        let input = r#"{ "elm1" : 123, "elm2" : 1.414 , "elm3" : "apple", "elm4": false }"#;
         let mut tokenizer = Tokenizer::new(input);
         assert_eq!(tokenizer.next_token(), Ok(Token::LeftCurlyBranckt));
 
@@ -288,7 +315,7 @@ mod tests {
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("elm2".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next_token(), Ok(Token::Number("456".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("1.414".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("elm3".to_string())));
@@ -307,7 +334,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn tokenzie_object_no_whitespaces() {
-        let input = r#"{"elm1":123,"elm2":456,"elm3":"apple","elm4":false}"#;
+        let input = r#"{"elm1":123,"elm2":1.414,"elm3":"apple","elm4":false}"#;
         let mut tokenizer = Tokenizer::new(input);
         assert_eq!(tokenizer.next_token(), Ok(Token::LeftCurlyBranckt));
 
@@ -318,7 +345,7 @@ mod tests {
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("elm2".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next_token(), Ok(Token::Number("456".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("1.414".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("elm3".to_string())));
@@ -337,14 +364,14 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn tokenize_list() {
-        let input = r#"[ 123, 456 , "apple", true ]"#;
+        let input = r#"[ 123, 1.414 , "apple", true ]"#;
         let mut tokenizer = Tokenizer::new(input);
         assert_eq!(tokenizer.next_token(), Ok(Token::LeftSquareBrancket));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::Number("123".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next_token(), Ok(Token::Number("456".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("1.414".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("apple".to_string())));
@@ -359,7 +386,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn tokenize_list_no_whitespaces() {
-        let input = r#"[123,456,"apple",true]"#;
+        let input = r#"[123,1.414,"apple",true]"#;
         let mut tokenizer = Tokenizer::new(input);
 
         assert_eq!(tokenizer.next_token(), Ok(Token::LeftSquareBrancket));
@@ -367,7 +394,7 @@ mod tests {
         assert_eq!(tokenizer.next_token(), Ok(Token::Number("123".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next_token(), Ok(Token::Number("456".to_string())));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("1.414".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("apple".to_string())));
