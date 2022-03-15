@@ -10,8 +10,7 @@ pub enum Node {
     Object(IndexMap<String, Node>),
     Array(Vec<Node>),
     Boolean(bool),
-    Int(i64),
-    // Float(f64),
+    Number(String),
     String(String),
 }
 
@@ -36,7 +35,7 @@ impl Parser {
         match self.front() {
             Some(Token::LeftCurlyBranckt) => self.object(),
             Some(Token::LeftSquareBrancket) => self.array(),
-            Some(Token::Int(_)) => self.int(),
+            Some(Token::Number(_)) => self.int(),
             Some(Token::String(_)) => self.string(),
             Some(Token::Boolean(_)) => self.boolean(),
             Some(Token::Null) => self.null(),
@@ -138,7 +137,7 @@ impl Parser {
 
     fn int(&mut self) -> Result<Node, String> {
         match self.pop() {
-            Some(Token::Int(num)) => Ok(Node::Int(num)),
+            Some(Token::Number(num)) => Ok(Node::Number(num)),
             _ => Err("Parse found an unexpected token while parsing int.".to_string()),
         }
     }
@@ -179,10 +178,10 @@ mod tests {
     #[test]
     fn parse_int() {
         let mut tokens = VecDeque::new();
-        tokens.push_back(Token::Int(123));
+        tokens.push_back(Token::Number("123".to_string()));
         tokens.push_back(Token::Eof);
 
-        let expected = Node::Int(123);
+        let expected = Node::Number("123".to_string());
         let node = Parser::new(tokens).parse();
 
         assert_eq!(node, Ok(expected));
@@ -219,12 +218,12 @@ mod tests {
 
         tokens.push_back(Token::String("elm1".to_string()));
         tokens.push_back(Token::Colon);
-        tokens.push_back(Token::Int(123));
+        tokens.push_back(Token::Number("123".to_string()));
         tokens.push_back(Token::Comma);
 
         tokens.push_back(Token::String("elm2".to_string()));
         tokens.push_back(Token::Colon);
-        tokens.push_back(Token::Int(456));
+        tokens.push_back(Token::Number("456".to_string()));
         tokens.push_back(Token::Comma);
 
         tokens.push_back(Token::String("elm3".to_string()));
@@ -242,8 +241,8 @@ mod tests {
         #[rustfmt::skip]
         let expected = Node::Object(
             IndexMap::from([
-                ("elm1".to_string(), Node::Int(123)), 
-                ("elm2".to_string(), Node::Int(456)), 
+                ("elm1".to_string(), Node::Number("123".to_string())), 
+                ("elm2".to_string(), Node::Number("456".to_string())), 
                 ("elm3".to_string(), Node::String("apple".to_string())), 
                 ("elm4".to_string(), Node::Boolean(false))
             ]));
@@ -258,10 +257,10 @@ mod tests {
 
         tokens.push_back(Token::LeftSquareBrancket);
 
-        tokens.push_back(Token::Int(123));
+        tokens.push_back(Token::Number("123".to_string()));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::Int(456));
+        tokens.push_back(Token::Number("456".to_string()));
         tokens.push_back(Token::Comma);
 
         tokens.push_back(Token::String("apple".to_string()));
@@ -275,8 +274,8 @@ mod tests {
         #[rustfmt::skip]
         let expected = Node::Array(
             Vec::from([
-                Node::Int(123),
-                Node::Int(456),
+                Node::Number("123".to_string()),
+                Node::Number("456".to_string()),
                 Node::String("apple".to_string()),
                 Node::Boolean(true)
             ]));
@@ -296,12 +295,12 @@ mod tests {
 
         tokens.push_back(Token::String("Width".to_string()));
         tokens.push_back(Token::Colon);
-        tokens.push_back(Token::Int(800));
+        tokens.push_back(Token::Number("800".to_string()));
         tokens.push_back(Token::Comma);
 
         tokens.push_back(Token::String("Height".to_string()));
         tokens.push_back(Token::Colon);
-        tokens.push_back(Token::Int(600));
+        tokens.push_back(Token::Number("600".to_string()));
         tokens.push_back(Token::Comma);
 
         tokens.push_back(Token::String("Title".to_string()));
@@ -322,12 +321,12 @@ mod tests {
 
         tokens.push_back(Token::String("Height".to_string()));
         tokens.push_back(Token::Colon);
-        tokens.push_back(Token::Int(125));
+        tokens.push_back(Token::Number("125".to_string()));
         tokens.push_back(Token::Comma);
 
         tokens.push_back(Token::String("Width".to_string()));
         tokens.push_back(Token::Colon);
-        tokens.push_back(Token::Int(100));
+        tokens.push_back(Token::Number("100".to_string()));
 
         tokens.push_back(Token::RightCurlyBranckt);
         tokens.push_back(Token::Comma);
@@ -341,16 +340,16 @@ mod tests {
         tokens.push_back(Token::Colon);
         tokens.push_back(Token::LeftSquareBrancket);
 
-        tokens.push_back(Token::Int(116));
+        tokens.push_back(Token::Number("116".to_string()));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::Int(943));
+        tokens.push_back(Token::Number("943".to_string()));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::Int(234));
+        tokens.push_back(Token::Number("234".to_string()));
         tokens.push_back(Token::Comma);
 
-        tokens.push_back(Token::Int(38793));
+        tokens.push_back(Token::Number("38793".to_string()));
 
         tokens.push_back(Token::RightSquareBrancket);
 
@@ -362,22 +361,22 @@ mod tests {
             IndexMap::from([
                 ("Image".to_string(), Node::Object(
                         IndexMap::from([
-                            ("Width".to_string(), Node::Int(800)),
-                            ("Height".to_string(), Node::Int(600)),
+                            ("Width".to_string(), Node::Number("800".to_string())),
+                            ("Height".to_string(), Node::Number("600".to_string())),
                             ("Title".to_string(), Node::String("View from 15th Floor".to_string())),
                             ("Thumbnail".to_string(), Node::Object(
                                     IndexMap::from([
                                         ("Url".to_string(), Node::String("http://www.example.com/image/481989943".to_string())),
-                                        ("Height".to_string(), Node::Int(125)),
-                                        ("Width".to_string(), Node::Int(100)) 
+                                        ("Height".to_string(), Node::Number("125".to_string())),
+                                        ("Width".to_string(), Node::Number("100".to_string())) 
                                     ]))
                             ),
                             ("Animated".to_string(), Node::Boolean(false)),
                             ("IDs".to_string(), Node::Array(Vec::from([
-                                    Node::Int(116),
-                                    Node::Int(943),
-                                    Node::Int(234),
-                                    Node::Int(38793) 
+                                    Node::Number("116".to_string()),
+                                    Node::Number("943".to_string()),
+                                    Node::Number("234".to_string()),
+                                    Node::Number("38793".to_string()) 
                             ])))
                         ])
                 ))

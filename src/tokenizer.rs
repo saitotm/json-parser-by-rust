@@ -2,12 +2,10 @@ use std::collections::VecDeque;
 
 use crate::json_util;
 
-// Todo: remove PartialEq and Eq to add Float
 #[derive(Debug, PartialEq, Eq)]
 pub enum Token {
     Null,
-    Int(i64),
-    // Float(f64),
+    Number(String),
     String(String),
     Boolean(bool),
     Colon,
@@ -121,11 +119,11 @@ impl Tokenizer {
             Some('-') => {
                 self.pop();
                 let num = self.read_digits()?;
-                Ok(Token::Int(-num))
+                Ok(Token::Number((-num).to_string()))
             }
             _ => {
                 let num = self.read_digits()?;
-                Ok(Token::Int(num))
+                Ok(Token::Number(num.to_string()))
             }
         }
     }
@@ -224,7 +222,7 @@ mod tests {
     #[rustfmt::skip]
     fn tokenize_zero() {
         let mut tokenizer = Tokenizer::new("0");
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(0)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("0".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
@@ -232,7 +230,7 @@ mod tests {
     #[rustfmt::skip]
     fn tokenize_int() {
         let mut tokenizer = Tokenizer::new("123");
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("123".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
@@ -240,7 +238,7 @@ mod tests {
     #[rustfmt::skip]
     fn tokenize_minus_int() {
         let mut tokenizer = Tokenizer::new("-123");
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(-123)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("-123".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Eof));
     }
 
@@ -285,12 +283,12 @@ mod tests {
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("elm1".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("123".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("elm2".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(456)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("456".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("elm3".to_string())));
@@ -315,12 +313,12 @@ mod tests {
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("elm1".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("123".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("elm2".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(456)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("456".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("elm3".to_string())));
@@ -343,10 +341,10 @@ mod tests {
         let mut tokenizer = Tokenizer::new(input);
         assert_eq!(tokenizer.next_token(), Ok(Token::LeftSquareBrancket));
 
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("123".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(456)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("456".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("apple".to_string())));
@@ -366,10 +364,10 @@ mod tests {
 
         assert_eq!(tokenizer.next_token(), Ok(Token::LeftSquareBrancket));
 
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(123)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("123".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(456)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("456".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("apple".to_string())));
@@ -410,12 +408,12 @@ mod tests {
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("Width".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(800)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("800".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("Height".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(600)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("600".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("Title".to_string())));
@@ -434,12 +432,12 @@ mod tests {
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("Height".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(125)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("125".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::String("Width".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Colon));
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(100)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("100".to_string())));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::RightCurlyBranckt));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
@@ -454,16 +452,16 @@ mod tests {
 
         assert_eq!(tokenizer.next_token(), Ok(Token::LeftSquareBrancket));
 
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(116)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("116".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(943)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("943".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(234)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("234".to_string())));
         assert_eq!(tokenizer.next_token(), Ok(Token::Comma));
 
-        assert_eq!(tokenizer.next_token(), Ok(Token::Int(38793)));
+        assert_eq!(tokenizer.next_token(), Ok(Token::Number("38793".to_string())));
 
         assert_eq!(tokenizer.next_token(), Ok(Token::RightSquareBrancket));
 
@@ -480,12 +478,12 @@ mod tests {
 
         assert_eq!(tokenizer.next(), Some(Ok(Token::String("elm1".to_string()))));
         assert_eq!(tokenizer.next(), Some(Ok(Token::Colon)));
-        assert_eq!(tokenizer.next(), Some(Ok(Token::Int(123))));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::Number("123".to_string()))));
         assert_eq!(tokenizer.next(), Some(Ok(Token::Comma)));
 
         assert_eq!(tokenizer.next(), Some(Ok(Token::String("elm2".to_string()))));
         assert_eq!(tokenizer.next(), Some(Ok(Token::Colon)));
-        assert_eq!(tokenizer.next(), Some(Ok(Token::Int(456))));
+        assert_eq!(tokenizer.next(), Some(Ok(Token::Number("456".to_string()))));
         assert_eq!(tokenizer.next(), Some(Ok(Token::Comma)));
 
         assert_eq!(tokenizer.next(), Some(Ok(Token::String("elm3".to_string()))));

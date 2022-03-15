@@ -27,7 +27,7 @@ impl Generator {
     fn generate_impl(&self, node: &Node, prefix: &str) -> String {
         match node {
             Node::Null => "null".to_string(),
-            Node::Int(num) => num.to_string(),
+            Node::Number(num) => num.to_string(),
             Node::String(value) => self.generate_string(value.to_string()),
             Node::Boolean(b) => b.to_string(),
             Node::Object(kvm) => self.generate_object(kvm, prefix),
@@ -61,7 +61,11 @@ impl Generator {
     }
 
     fn generate_object(&self, kvm: &IndexMap<String, Node>, prefix: &str) -> String {
-        format!("{{\n{}\n{}}}", self.generate_object_inner(kvm, prefix), prefix)
+        format!(
+            "{{\n{}\n{}}}",
+            self.generate_object_inner(kvm, prefix),
+            prefix
+        )
     }
 
     fn generate_array(&self, arr: &[Node], prefix: &str) -> String {
@@ -91,7 +95,7 @@ mod tests {
 
     #[test]
     fn generate_int() {
-        let node = Node::Int(123);
+        let node = Node::Number("123".to_string());
         let gen = Generator::new(node, 4);
 
         assert_eq!(gen.generate(), "123");
@@ -124,8 +128,8 @@ mod tests {
     #[test]
     fn generate_object() {
         let node = Node::Object(IndexMap::from([
-            ("elm1".to_string(), Node::Int(123)),
-            ("elm2".to_string(), Node::Int(456)),
+            ("elm1".to_string(), Node::Number("123".to_string())),
+            ("elm2".to_string(), Node::Number("456".to_string())),
             ("elm3".to_string(), Node::String("apple".to_string())),
             ("elm4".to_string(), Node::Boolean(false)),
         ]));
@@ -147,8 +151,8 @@ mod tests {
     #[test]
     fn generate_array() {
         let node = Node::Array(Vec::from([
-            Node::Int(123),
-            Node::Int(456),
+            Node::Number("123".to_string()),
+            Node::Number("456".to_string()),
             Node::String("apple".to_string()),
             Node::Boolean(true),
         ]));
@@ -174,22 +178,22 @@ mod tests {
             IndexMap::from([
                 ("Image".to_string(), Node::Object(
                         IndexMap::from([
-                            ("Width".to_string(), Node::Int(800)),
-                            ("Height".to_string(), Node::Int(600)),
+                            ("Width".to_string(), Node::Number("800".to_string())),
+                            ("Height".to_string(), Node::Number("600".to_string())),
                             ("Title".to_string(), Node::String("View from 15th Floor".to_string())),
                             ("Thumbnail".to_string(), Node::Object(
                                     IndexMap::from([
                                         ("Url".to_string(), Node::String("http://www.example.com/image/481989943".to_string())),
-                                        ("Height".to_string(), Node::Int(125)),
-                                        ("Width".to_string(), Node::Int(100)) 
+                                        ("Height".to_string(), Node::Number("125".to_string())),
+                                        ("Width".to_string(), Node::Number("100".to_string())) 
                                     ]))
                             ),
                             ("Animated".to_string(), Node::Boolean(false)),
                             ("IDs".to_string(), Node::Array(Vec::from([
-                                    Node::Int(116),
-                                    Node::Int(943),
-                                    Node::Int(234),
-                                    Node::Int(38793) 
+                                    Node::Number("116".to_string()),
+                                    Node::Number("943".to_string()),
+                                    Node::Number("234".to_string()),
+                                    Node::Number("38793".to_string()) 
                             ])))
                         ])
                 ))
