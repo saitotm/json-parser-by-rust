@@ -9,7 +9,7 @@ pub fn is_unescaped(c: char) -> bool {
     ('\x20'..='\x21').contains(&c) || ('\x23'..='\x5B').contains(&c) || c >= '\x5D'
 }
 
-// Todo: fix about uXXXX
+// TODO: fix about uXXXX
 pub fn is_escape_target(c: char) -> bool {
     let escape_targets = [
         '\x22', '\x5C', '\x2F', '\x62', '\x66', '\x6E', '\x72', '\x74',
@@ -17,7 +17,7 @@ pub fn is_escape_target(c: char) -> bool {
     escape_targets.contains(&c)
 }
 
-// Todo: fix about uXXXX
+// TODO: fix about uXXXX
 pub fn escape(c: char) -> Option<char> {
     match c {
         '\x22' => Some('\u{0022}'), // "    quotation mark  U+0022

@@ -205,7 +205,7 @@ impl Tokenizer {
         }
     }
 
-    // Todo: fix to remove the call of is_escape_target.
+    // TODO: fix to remove the call of is_escape_target.
     fn pop_escape(&mut self) -> Option<char> {
         match self.front() {
             Some(&c) if json_util::is_escape_target(c) => {
@@ -220,7 +220,7 @@ impl Tokenizer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    // Todo: define a function or macro to determine whether two tokens are same or not.
+    // TODO: define a function or macro to determine whether two tokens are same or not.
 
     #[test]
     #[rustfmt::skip]
